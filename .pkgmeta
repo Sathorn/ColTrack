@@ -1,0 +1,11 @@
+package-as: ColTrack
+
+ignore:
+  - .github
+  - docs
+  - SESSION_NOTES.txt
+  - scripts
+  - recolor_atlas.py
+  - Images/objecticonsatlas.png
+  - Images/log2.tga
+  - Images/logIcon.png

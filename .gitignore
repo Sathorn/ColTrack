@@ -13,6 +13,7 @@ __pycache__/
 # Local screenshots/work images (keep actual addon assets)
 Images/bug*.png
 Images/off*.png
+Images/logIcon.png
 
 # Keep only libraries loaded by ColTrack.toc
 Libs/**
