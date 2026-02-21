@@ -39,20 +39,3 @@ It is built to make tracked node types easier to distinguish at a glance (Fish, 
 1. Place this folder as `Interface/AddOns/ColTrack`.
 2. Enable `ColTrack` in WoW AddOns.
 3. Open settings: `Esc -> Options -> AddOns -> ColTrack`.
-
-## CurseForge Automatic Packaging
-CurseForge packaging is configured for tagged commits.
-
-Release steps:
-1. Update version in `ColTrack.toc` and docs.
-2. Commit changes to `main`.
-3. Create and push a tag matching the addon version (example: `v0.30.3`).
-4. CurseForge packager builds the release from the tag.
-
-Commands:
-```bash
-git tag v0.30.3
-git push origin main --tags
-```
-
-Packaging rules are defined in `.pkgmeta`.
