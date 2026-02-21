@@ -1,17 +1,7 @@
-# ColTrack GitHub Site Notes
+# ColTrack Docs
 
-This folder is the GitHub Pages source for the project website.
+Main project documentation is in the repository root:
+- `README.md`
 
-## Files
-- `docs/index.html`: public project page.
-- `.github/workflows/pages.yml`: deployment workflow.
-
-## Enable Pages
-1. Push this repository to GitHub.
-2. Open repository settings.
-3. Go to **Pages**.
-4. Under **Build and deployment**, choose **GitHub Actions**.
-5. The `Deploy GitHub Pages` workflow will publish `docs/`.
-
-## URL
-`https://<username>.github.io/<repo>/`
+This folder contains the GitHub Pages site source:
+- `docs/index.html`
