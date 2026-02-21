@@ -1,5 +1,7 @@
 # Local logs/state
 scripts/watch_addon.log
+scripts/
+recolor_atlas.py
 __pycache__/
 *.pyc
 
