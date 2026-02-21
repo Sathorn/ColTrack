@@ -14,6 +14,8 @@ __pycache__/
 Images/bug*.png
 Images/off*.png
 Images/logIcon.png
+Images/log2.tga
+Images/objecticonsatlas.png
 
 # Keep only libraries loaded by ColTrack.toc
 Libs/**
