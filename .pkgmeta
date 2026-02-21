@@ -7,3 +7,5 @@ ignore:
   - scripts
   - recolor_atlas.py
   - Images/logIcon.png
+
+manual-changelog: CHANGELOG.md
