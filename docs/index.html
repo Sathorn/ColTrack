@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ColTrack</title>
+  <meta name="description" content="World of Warcraft addon for custom minimap tracking icon presets, profiles, and quick switching.">
+  <style>
+    :root {
+      --bg: #0f1722;
+      --bg-2: #142235;
+      --text: #ebf1f8;
+      --muted: #a5b7cb;
+      --line: #27415f;
+      --card: #132030;
+      --accent: #f0c34f;
+      --accent-2: #6ec3ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font: 16px/1.5 "Segoe UI", "Trebuchet MS", sans-serif;
+      background:
+        radial-gradient(1200px 520px at 20% -20%, #1e3554 0%, rgba(30,53,84,0) 70%),
+        radial-gradient(1000px 500px at 100% 0%, #16324b 0%, rgba(22,50,75,0) 70%),
+        linear-gradient(180deg, var(--bg), #0b1118);
+    }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 56px; }
+    .hero {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(180deg, #15263a, #101b29);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 18px 40px rgba(0,0,0,.35);
+    }
+    h1, h2 { margin: 0 0 10px; line-height: 1.2; }
+    h1 { font-size: 34px; letter-spacing: .4px; }
+    h2 { margin-top: 28px; font-size: 22px; color: var(--accent); }
+    p { margin: 0 0 10px; color: var(--muted); }
+    .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin-top: 14px; }
+    .card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(180deg, #122336, var(--card));
+    }
+    .card strong { color: var(--text); display: block; margin-bottom: 4px; }
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      background: #0b131d;
+      color: #cfe7ff;
+      border: 1px solid #27405b;
+      border-radius: 6px;
+      padding: 2px 6px;
+    }
+    ul { margin: 0; padding-left: 18px; color: var(--muted); }
+    li { margin-bottom: 8px; }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      border-radius: 10px;
+      background: #0f1b2a;
+    }
+    .table th, .table td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .table th { color: var(--accent-2); background: #12283d; font-weight: 600; }
+    .table tr:last-child td { border-bottom: 0; }
+    .small { font-size: 14px; color: #9cb2ca; }
+    a { color: #8fd0ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>ColTrack</h1>
+      <p>Custom minimap tracking icon presets for World of Warcraft.</p>
+      <p class="small">Version: <strong>0.30.0</strong></p>
+    </section>
+
+    <h2>What It Does</h2>
+    <div class="grid">
+      <article class="card">
+        <strong>Preset Color Packs</strong>
+        Switch between Blizzard and custom tracking icon palettes.
+      </article>
+      <article class="card">
+        <strong>Profiles</strong>
+        Create named profiles, with account-wide or per-character behavior.
+      </article>
+      <article class="card">
+        <strong>Minimap Button</strong>
+        Left click cycles presets, right click opens options.
+      </article>
+      <article class="card">
+        <strong>Visual Preview</strong>
+        Presets tab shows icon previews for Fish, Herb, Ore, and Lumber.
+      </article>
+    </div>
+
+    <h2>Included Presets</h2>
+    <table class="table" aria-label="ColTrack presets">
+      <thead>
+        <tr>
+          <th>Preset</th>
+          <th>Palette</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Base (Blizzard)</td>
+          <td>Default Blizzard icons</td>
+        </tr>
+        <tr>
+          <td>Fish Pink / Herb Green / Ore Blue / Lumber Yellow</td>
+          <td>Fish <code>#FF69B4</code>, Herb <code>#3ECF3E</code>, Ore <code>#238DF7</code>, Lumber <code>#CFAF08</code></td>
+        </tr>
+        <tr>
+          <td>Fish Blue / Herb Green / Ore Yellow / Lumber Pink</td>
+          <td>Fish <code>#238DF7</code>, Herb <code>#3ECF3E</code>, Ore <code>#CFAF08</code>, Lumber <code>#FF69B4</code></td>
+        </tr>
+        <tr>
+          <td>White Outline / Black Fill</td>
+          <td>Inverted grayscale style for high-contrast readability</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Install</h2>
+    <ul>
+      <li>Copy the addon folder to <code>Interface/AddOns/ColTrack</code>.</li>
+      <li>Enable <code>ColTrack</code> in the in-game AddOns list.</li>
+      <li>Open options via <code>Esc -> Options -> AddOns -> ColTrack</code> or right-click the minimap icon.</li>
+    </ul>
+
+    <h2>Project Layout</h2>
+    <ul>
+      <li><code>ColTrack.lua</code>: addon logic and settings UI.</li>
+      <li><code>ColTrack.toc</code>: addon metadata and load order.</li>
+      <li><code>recolor_atlas.py</code>: texture preset generator.</li>
+      <li><code>Textures/</code>: generated atlas textures used by presets.</li>
+      <li><code>scripts/sync_addon.sh</code>: sync project files into local WoW AddOns folder.</li>
+    </ul>
+
+    <h2>GitHub Pages Deployment</h2>
+    <p>This site is deployed automatically by GitHub Actions using <code>.github/workflows/pages.yml</code>.</p>
+    <ul>
+      <li>Push to <code>main</code>.</li>
+      <li>In GitHub: <code>Settings -> Pages -> Build and deployment -> Source: GitHub Actions</code>.</li>
+      <li>Site URL format: <code>https://&lt;username&gt;.github.io/&lt;repo&gt;/</code>.</li>
+    </ul>
+  </main>
+</body>
+</html>

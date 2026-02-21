@@ -1,0 +1,22 @@
+# Local logs/state
+scripts/watch_addon.log
+__pycache__/
+*.pyc
+
+# Windows metadata
+*.Zone.Identifier
+
+# Local screenshots/work images (keep actual addon assets)
+Images/bug*.png
+Images/off*.png
+
+# Keep only libraries loaded by ColTrack.toc
+Libs/*
+!Libs/LibStub/
+!Libs/LibStub/LibStub.lua
+!Libs/CallbackHandler-1.0/
+!Libs/CallbackHandler-1.0/CallbackHandler-1.0.lua
+!Libs/LibDataBroker-1.1/
+!Libs/LibDataBroker-1.1/LibDataBroker-1.1.lua
+!Libs/LibDBIcon-1.0/
+!Libs/LibDBIcon-1.0/LibDBIcon-1.0.lua

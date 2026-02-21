@@ -1,0 +1,14 @@
+## Interface: 120001
+## Title: ColTrack
+## Notes: Minimap tracking icon color presets
+## Author: You
+## Version: 0.30.0
+## SavedVariables: ColTrackDB
+## SavedVariablesPerCharacter: ColTrackDBPC
+
+Libs/LibStub/LibStub.lua
+Libs/CallbackHandler-1.0/CallbackHandler-1.0.lua
+Libs/LibDataBroker-1.1/LibDataBroker-1.1.lua
+Libs/LibDBIcon-1.0/LibDBIcon-1.0.lua
+
+ColTrack.lua
