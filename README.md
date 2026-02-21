@@ -5,7 +5,7 @@ ColTrack is a World of Warcraft addon that changes minimap tracking icon colors 
 It is built to make tracked node types easier to distinguish at a glance (Fish, Herb, Ore, Lumber), with profile support and quick switching from the minimap.
 
 ## Current Version
-`0.30.2`
+`0.30.3`
 
 ## Versioning Policy
 - Minor release: increase third number (`0.30.0 -> 0.30.1`).
@@ -46,12 +46,12 @@ CurseForge packaging is configured for tagged commits.
 Release steps:
 1. Update version in `ColTrack.toc` and docs.
 2. Commit changes to `main`.
-3. Create and push a tag matching the addon version (example: `v0.30.2`).
+3. Create and push a tag matching the addon version (example: `v0.30.3`).
 4. CurseForge packager builds the release from the tag.
 
 Commands:
 ```bash
-git tag v0.30.2
+git tag v0.30.3
 git push origin main --tags
 ```
 
