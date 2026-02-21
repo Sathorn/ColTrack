@@ -2,6 +2,7 @@
 scripts/watch_addon.log
 scripts/
 recolor_atlas.py
+SESSION_NOTES.txt
 __pycache__/
 *.pyc
 
