@@ -1,6 +1,6 @@
 local ADDON = ...
 local BASE = "Interface\\Minimap\\ObjectIconsAtlas"
-local ICON = "Interface\\AddOns\\ColTrack\\Images\\log2.tga"
+local ICON = "Interface\\AddOns\\ColTrack\\Images\\logIcon.tga"
 
 local rootPanel
 local category
