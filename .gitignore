@@ -5,13 +5,14 @@ __pycache__/
 
 # Windows metadata
 *.Zone.Identifier
+*:Zone.Identifier
 
 # Local screenshots/work images (keep actual addon assets)
 Images/bug*.png
 Images/off*.png
 
 # Keep only libraries loaded by ColTrack.toc
-Libs/*
+Libs/**
 !Libs/LibStub/
 !Libs/LibStub/LibStub.lua
 !Libs/CallbackHandler-1.0/
