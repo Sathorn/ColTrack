@@ -35,12 +35,3 @@ It is built to make tracked node types easier to distinguish at a glance (Fish, 
 1. Place this folder as `Interface/AddOns/ColTrack`.
 2. Enable `ColTrack` in WoW AddOns.
 3. Open settings: `Esc -> Options -> AddOns -> ColTrack`.
-
-## GitHub Pages
-Project site source is in `docs/`.
-
-Workflow:
-- `.github/workflows/pages.yml`
-
-Expected URL:
-- `https://<username>.github.io/<repo>/`
