@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.30.5-beta3
+- Replaced generic colorblind presets with type-specific presets:
+  - `Deuteranomaly`
+  - `Deuteranopia`
+  - `Protanopia`
+  - `Tritanopia`
+- Tuned per-type palettes for better in-game readability and clearer contrast.
+- Regenerated colorblind atlas textures as `.blp` with no mipmaps to avoid minimap artifacting.
+- Removed old colorblind atlas files (`ObjectIconsAtlas_colorblindRG.blp`, `ObjectIconsAtlas_colorblindBY.blp`).
+- Updated README/docs preset lists and version references.
+
 ## v0.30.5-beta2
 - Switched preset atlas textures from `.tga` to `.blp` (BLP2/DXT5) for smaller download size.
 - Removed legacy `.tga` atlas files from `Textures/`.

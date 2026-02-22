@@ -34,12 +34,20 @@ local PRESETS = {
     tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vividBlue",
   },
   {
-    label = "Colorblind (Red-Green Safe)",
-    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_colorblindRG",
+    label = "Deuteranomaly",
+    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_deuteranomaly",
   },
   {
-    label = "Colorblind (Blue-Yellow Safe)",
-    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_colorblindBY",
+    label = "Deuteranopia",
+    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_deuteranopia",
+  },
+  {
+    label = "Protanopia",
+    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_protanopia",
+  },
+  {
+    label = "Tritanopia",
+    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_tritanopia",
   },
   {
     label = "White Outline / Black Fill",
