@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.30.5-beta2
+- Switched preset atlas textures from `.tga` to `.blp` (BLP2/DXT5) for smaller download size.
+- Removed legacy `.tga` atlas files from `Textures/`.
+- Kept all preset names and color variants unchanged.
+
 ## v0.30.5-beta1
 - Added two new bright preset families:
   - `Vivid: Fish Magenta / Herb Lime / Ore Cyan / Lumber Gold`
