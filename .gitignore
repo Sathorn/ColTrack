@@ -27,3 +27,6 @@ Libs/**
 !Libs/LibDataBroker-1.1/LibDataBroker-1.1.lua
 !Libs/LibDBIcon-1.0/
 !Libs/LibDBIcon-1.0/LibDBIcon-1.0.lua
+
+# Local helper content (not for repo)
+local_notes/

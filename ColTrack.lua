@@ -30,8 +30,8 @@ local PRESETS = {
     tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_fishBlue_herbGreen_oreYellow_lumberPink",
   },
   {
-    label = "Vivid: Fish Blue / Herb Green / Ore Yellow / Lumber Pink",
-    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vividBlue",
+    label = "Vivid: Fish Blue / Herb Lime / Ore Yellow / Lumber Hot Pink",
+    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_fishBlue_herbLime_oreYellow_lumberHotPink",
   },
   {
     label = "Deuteranomaly",
@@ -54,6 +54,26 @@ local PRESETS = {
     tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_outlineWhite_fillBlack",
   },
 }
+
+local LEGACY_TEX_MAP = {
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_colorblindRG"] = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_deuteranopia",
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_colorblindBY"] = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_tritanopia",
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_colorblindCommunity"] = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_deuteranomaly",
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid_blp"] = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid",
+}
+
+local VALID_TEX = {}
+for _, p in ipairs(PRESETS) do
+  VALID_TEX[p.tex] = true
+end
+
+local function NormalizeTex(tex)
+  tex = LEGACY_TEX_MAP[tex] or tex
+  if VALID_TEX[tex] then
+    return tex
+  end
+  return BASE
+end
 
 local function Apply(tex)
   if Minimap and Minimap.SetBlipTexture then
@@ -121,7 +141,12 @@ end
 local function LoadPreset()
   local store = EnsureStore(ActiveStore())
   local profile = store.profiles[store.currentProfile]
-  return (profile and profile.tex) or BASE
+  local tex = (profile and profile.tex) or BASE
+  local normalized = NormalizeTex(tex)
+  if normalized ~= tex then
+    SavePreset(normalized)
+  end
+  return normalized
 end
 
 local function LabelForTex(tex)
@@ -274,11 +299,7 @@ local function CreatePanels()
 
   local presetsTitle = presetsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
   presetsTitle:SetPoint("TOPLEFT", 16, -16)
-  presetsTitle:SetText("Presets")
-
-  local previewLabel = presetsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-  previewLabel:SetPoint("TOPLEFT", presetsTitle, "BOTTOMLEFT", 0, -12)
-  previewLabel:SetText("Preview")
+  presetsTitle:SetText("Presets Preview")
 
   local ICON_RECTS = {
     { label = "Fish", x = 928, y = 517, w = 32, h = 32, oy = 0 },
@@ -296,10 +317,15 @@ local function CreatePanels()
     return u1, u2, v1, v2
   end
 
-  for i, p in ipairs(PRESETS) do
+  local function IsAccessibilityPreset(p)
+    return p.tex:find("ObjectIconsAtlas_cb_") ~= nil
+      or p.tex == "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_outlineWhite_fillBlack"
+  end
+
+  local function CreatePresetRow(p, y)
     local row = CreateFrame("Button", nil, presetsPanel)
     row:SetSize(560, 26)
-    row:SetPoint("TOPLEFT", previewLabel, "BOTTOMLEFT", 0, -6 - (i - 1) * 30)
+    row:SetPoint("TOPLEFT", presetsTitle, "BOTTOMLEFT", 0, y)
     row.tex = p.tex
 
     local sel = row:CreateTexture(nil, "BACKGROUND")
@@ -331,6 +357,32 @@ local function CreatePanels()
     end)
 
     presetPreviewButtons[#presetPreviewButtons + 1] = row
+  end
+
+  local function CreateSectionHeader(text, y)
+    local h = presetsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    h:SetPoint("TOPLEFT", presetsTitle, "BOTTOMLEFT", 0, y)
+    h:SetText(text)
+  end
+
+  local y = -14
+  CreateSectionHeader("Standard Presets", y)
+  y = y - 28
+  for _, p in ipairs(PRESETS) do
+    if not IsAccessibilityPreset(p) then
+      CreatePresetRow(p, y)
+      y = y - 30
+    end
+  end
+
+  y = y - 4
+  CreateSectionHeader("Accessibility Presets", y)
+  y = y - 28
+  for _, p in ipairs(PRESETS) do
+    if IsAccessibilityPreset(p) then
+      CreatePresetRow(p, y)
+      y = y - 30
+    end
   end
 
   profilesPanel = CreateFrame("Frame")
@@ -422,8 +474,21 @@ end
 
 local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_LOGIN")
-f:SetScript("OnEvent", function()
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("MINIMAP_UPDATE_TRACKING")
+f:SetScript("OnEvent", function(_, event)
+  if event == "PLAYER_LOGIN" then
+    Apply(LoadPreset())
+    CreatePanels()
+    InitMinimapIcon()
+    return
+  end
+
+  -- Tracking updates and zone loads can reset minimap blip texture.
   Apply(LoadPreset())
-  CreatePanels()
-  InitMinimapIcon()
+  if C_Timer and C_Timer.After then
+    C_Timer.After(0, function()
+      Apply(LoadPreset())
+    end)
+  end
 end)

@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.30.5-beta4
+- Replaced `Vivid: Fish Blue / Herb Green / Ore Yellow / Lumber Pink` with:
+  - `Vivid: Fish Blue / Herb Lime / Ore Yellow / Lumber Hot Pink`
+  - Fish `#0091FF`, Herb `#35FF00`, Ore `#FDFF00`, Lumber `#FF00A0`
+- Updated Presets tab cosmetics:
+  - renamed title to `Presets Preview`
+  - removed separate `Preview` label
+  - split rows into `Standard Presets` and `Accessibility Presets`
+- Added saved preset migration for legacy texture IDs so old profiles map to current presets.
+- Added minimap blip texture reapply on world/tracking updates to reduce reset mismatches.
+- Updated version references in TOC/README/docs.
+
 ## v0.30.5-beta3
 - Replaced generic colorblind presets with type-specific presets:
   - `Deuteranomaly`
