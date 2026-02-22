@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.30.5-beta1
+- Added two new bright preset families:
+  - `Vivid: Fish Magenta / Herb Lime / Ore Cyan / Lumber Gold`
+  - `Vivid: Fish Blue / Herb Green / Ore Yellow / Lumber Pink`
+- Added two accessibility presets targeted for common color-vision deficiencies:
+  - `Colorblind (Red-Green Safe)`
+  - `Colorblind (Blue-Yellow Safe)`
+- Reworked vivid/colorblind texture generation to preserve Blizzard-style dark outlines.
+- Removed redundant preset dropdown from the Presets tab (single click-list selector remains).
+- Improved Presets preview layout:
+  - fixed long-label overlap with icon previews
+  - aligned icon column placement
+- Reordered presets for clearer flow:
+  - base -> standard/vivid pair 1 -> standard/vivid pair 2 -> colorblind presets -> white/black preset.
+- Updated `README.md` and `docs/index.html` to match the new preset lineup and palette values.
+
 ## v0.30.4
 - Bumped addon version to 0.30.4.
 - Updated documentation version references.

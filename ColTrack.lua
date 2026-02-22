@@ -22,8 +22,24 @@ local PRESETS = {
     tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_fishPink_herbGreen_oreBlue_lumberYellow",
   },
   {
+    label = "Vivid: Fish Magenta / Herb Lime / Ore Cyan / Lumber Gold",
+    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid",
+  },
+  {
     label = "Fish Blue / Herb Green / Ore Yellow / Lumber Pink",
     tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_fishBlue_herbGreen_oreYellow_lumberPink",
+  },
+  {
+    label = "Vivid: Fish Blue / Herb Green / Ore Yellow / Lumber Pink",
+    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vividBlue",
+  },
+  {
+    label = "Colorblind (Red-Green Safe)",
+    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_colorblindRG",
+  },
+  {
+    label = "Colorblind (Blue-Yellow Safe)",
+    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_colorblindBY",
   },
   {
     label = "White Outline / Black Fill",
@@ -130,6 +146,16 @@ local function NextPreset()
   end
 end
 
+local function SyncPresetUI()
+  local current = LoadPreset()
+  if presetDropdown then
+    UIDropDownMenu_SetText(presetDropdown, LabelForTex(current))
+  end
+  for _, b in ipairs(presetPreviewButtons) do
+    b.selected:SetShown(b.tex == current)
+  end
+end
+
 local function OpenOptions()
   if Settings and Settings.OpenToCategory then
     if category and category.ID then
@@ -220,7 +246,7 @@ local function CreatePanels()
         if name then
           Apply(LoadPreset())
           UIDropDownMenu_SetText(profileDropdown, name)
-          UIDropDownMenu_SetText(presetDropdown, LabelForTex(LoadPreset()))
+          SyncPresetUI()
         end
       end,
       OnShow = function(self)
@@ -242,33 +268,8 @@ local function CreatePanels()
   presetsTitle:SetPoint("TOPLEFT", 16, -16)
   presetsTitle:SetText("Presets")
 
-  local presetLabel = presetsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-  presetLabel:SetPoint("TOPLEFT", presetsTitle, "BOTTOMLEFT", 0, -12)
-  presetLabel:SetText("Preset")
-
-  presetDropdown = CreateFrame("Frame", "ColTrackPresetDropdown", presetsPanel, "UIDropDownMenuTemplate")
-  presetDropdown:SetPoint("TOPLEFT", presetLabel, "BOTTOMLEFT", -16, -2)
-  UIDropDownMenu_SetWidth(presetDropdown, 320)
-
-  UIDropDownMenu_Initialize(presetDropdown, function()
-    for _, p in ipairs(PRESETS) do
-      local info = UIDropDownMenu_CreateInfo()
-      info.text = p.label
-      info.checked = (LoadPreset() == p.tex)
-      info.func = function()
-        Apply(p.tex)
-        SavePreset(p.tex)
-        UIDropDownMenu_SetText(presetDropdown, p.label)
-        for _, b in ipairs(presetPreviewButtons) do
-          b.selected:SetShown(b.tex == p.tex)
-        end
-      end
-      UIDropDownMenu_AddButton(info)
-    end
-  end)
-
   local previewLabel = presetsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-  previewLabel:SetPoint("TOPLEFT", presetDropdown, "BOTTOMLEFT", 16, -12)
+  previewLabel:SetPoint("TOPLEFT", presetsTitle, "BOTTOMLEFT", 0, -12)
   previewLabel:SetText("Preview")
 
   local ICON_RECTS = {
@@ -289,7 +290,7 @@ local function CreatePanels()
 
   for i, p in ipairs(PRESETS) do
     local row = CreateFrame("Button", nil, presetsPanel)
-    row:SetSize(440, 26)
+    row:SetSize(560, 26)
     row:SetPoint("TOPLEFT", previewLabel, "BOTTOMLEFT", 0, -6 - (i - 1) * 30)
     row.tex = p.tex
 
@@ -301,9 +302,11 @@ local function CreatePanels()
 
     local label = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
     label:SetPoint("LEFT", row, "LEFT", 4, 0)
+    label:SetWidth(390)
+    label:SetJustifyH("LEFT")
     label:SetText(p.label)
 
-    local x = 300
+    local x = row:GetWidth() - (#ICON_RECTS * 24) + 2
     for _, r in ipairs(ICON_RECTS) do
       local t = row:CreateTexture(nil, "ARTWORK")
       t:SetSize(20, 20)
@@ -316,10 +319,7 @@ local function CreatePanels()
     row:SetScript("OnClick", function()
       Apply(p.tex)
       SavePreset(p.tex)
-      UIDropDownMenu_SetText(presetDropdown, p.label)
-      for _, b in ipairs(presetPreviewButtons) do
-        b.selected:SetShown(b.tex == p.tex)
-      end
+      SyncPresetUI()
     end)
 
     presetPreviewButtons[#presetPreviewButtons + 1] = row
@@ -342,7 +342,7 @@ local function CreatePanels()
     Apply(LoadPreset())
     local store = EnsureStore(ActiveStore())
     UIDropDownMenu_SetText(profileDropdown, store.currentProfile)
-    UIDropDownMenu_SetText(presetDropdown, LabelForTex(LoadPreset()))
+    SyncPresetUI()
   end)
 
   local showMinimap = CreateFrame("CheckButton", nil, profilesPanel, "InterfaceOptionsCheckButtonTemplate")
@@ -380,7 +380,7 @@ local function CreatePanels()
         store.currentProfile = name
         Apply(LoadPreset())
         UIDropDownMenu_SetText(profileDropdown, name)
-        UIDropDownMenu_SetText(presetDropdown, LabelForTex(LoadPreset()))
+        SyncPresetUI()
       end
       UIDropDownMenu_AddButton(info)
     end
@@ -396,10 +396,7 @@ local function CreatePanels()
 
   local store = EnsureStore(ActiveStore())
   UIDropDownMenu_SetText(profileDropdown, store.currentProfile)
-  UIDropDownMenu_SetText(presetDropdown, LabelForTex(LoadPreset()))
-  for _, b in ipairs(presetPreviewButtons) do
-    b.selected:SetShown(b.tex == LoadPreset())
-  end
+  SyncPresetUI()
 
   if Settings and Settings.RegisterCanvasLayoutCategory then
     category = Settings.RegisterCanvasLayoutCategory(rootPanel, "ColTrack")
