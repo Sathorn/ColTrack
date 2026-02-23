@@ -5,7 +5,7 @@ ColTrack is a World of Warcraft addon that changes minimap tracking icon colors 
 It is built to make tracked node types easier to distinguish at a glance (Fish, Herb, Ore, Lumber), with profile support and quick switching from the minimap.
 
 ## Current Version
-`0.30.5-beta4`
+`0.30.5-beta5`
 
 ## Versioning Policy
 - Minor release: increase third number (`0.30.0 -> 0.30.1`).
@@ -21,6 +21,7 @@ It is built to make tracked node types easier to distinguish at a glance (Fish, 
   - left click: next preset
   - right click: open options
 - Shows graphical preset preview in addon settings.
+- Includes optional Undermine vignette recolor support via a load-on-demand module.
 
 ## Presets Included
 - `Base (Blizzard)`
@@ -37,6 +38,7 @@ It is built to make tracked node types easier to distinguish at a glance (Fish, 
 ## Main Files
 - `ColTrack.toc` addon metadata and load list
 - `ColTrack.lua` addon logic and options UI
+- `ColTrack_Vignettes/` optional Undermine vignette overlay module
 - `Textures/` generated `.blp` atlas textures used by presets
 - `Images/logIcon.tga` minimap button icon
 - `Images/log.tga` AddOn list icon

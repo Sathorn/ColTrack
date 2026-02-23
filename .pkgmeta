@@ -1,5 +1,8 @@
 package-as: ColTrack
 
+move-folders:
+  ColTrack/ColTrack_Vignettes: ColTrack_Vignettes
+
 ignore:
   - .github
   - docs

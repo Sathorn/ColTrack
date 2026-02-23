@@ -5,11 +5,26 @@ local ICON = "Interface\\AddOns\\ColTrack\\Images\\logIcon.tga"
 local rootPanel
 local category
 local presetsPanel
+local minimapOptionsPanel
 local profilesPanel
+local vignettesPanel
 local profileDropdown
 local presetDropdown
 local ldbObject
 local presetPreviewButtons = {}
+local overlayLoadWarned
+
+local UNDERMINE_MAP_IDS = {
+  -- Keep both parent/child IDs when known to handle micro-dungeons.
+  [2346] = true,
+  [2347] = true,
+}
+
+local UNDERMINE_VIGNETTE_FALLBACK = {
+  trashcan = "lumber",
+  dumpster = "ore",
+  treasure = "ore",
+}
 
 -- Add your atlas files here (no extension)
 local PRESETS = {
@@ -81,6 +96,65 @@ local function Apply(tex)
   end
 end
 
+local function HexToRGB(h)
+  h = h:gsub("^#", "")
+  local r = tonumber(h:sub(1, 2), 16) or 255
+  local g = tonumber(h:sub(3, 4), 16) or 255
+  local b = tonumber(h:sub(5, 6), 16) or 255
+  return r / 255, g / 255, b / 255
+end
+
+local PRESET_COLORS = {
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_fishPink_herbGreen_oreBlue_lumberYellow"] = {
+    fish = { HexToRGB("#FF69B4") },
+    herb = { HexToRGB("#3ECF3E") },
+    ore = { HexToRGB("#238DF7") },
+    lumber = { HexToRGB("#CFAF08") },
+  },
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_fishBlue_herbGreen_oreYellow_lumberPink"] = {
+    fish = { HexToRGB("#238DF7") },
+    herb = { HexToRGB("#3ECF3E") },
+    ore = { HexToRGB("#CFAF08") },
+    lumber = { HexToRGB("#FF69B4") },
+  },
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid"] = {
+    fish = { HexToRGB("#FF2FB2") },
+    herb = { HexToRGB("#7CFF00") },
+    ore = { HexToRGB("#00CFFF") },
+    lumber = { HexToRGB("#FFD200") },
+  },
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_fishBlue_herbLime_oreYellow_lumberHotPink"] = {
+    fish = { HexToRGB("#0091FF") },
+    herb = { HexToRGB("#35FF00") },
+    ore = { HexToRGB("#FDFF00") },
+    lumber = { HexToRGB("#FF00A0") },
+  },
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_deuteranomaly"] = {
+    fish = { HexToRGB("#0C7BDC") },
+    herb = { HexToRGB("#40B0A6") },
+    ore = { HexToRGB("#FFC20A") },
+    lumber = { HexToRGB("#D41159") },
+  },
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_deuteranopia"] = {
+    fish = { HexToRGB("#1A85FF") },
+    herb = { HexToRGB("#00A087") },
+    ore = { HexToRGB("#FEFE62") },
+    lumber = { HexToRGB("#E76BF3") },
+  },
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_protanopia"] = {
+    fish = { HexToRGB("#006CD1") },
+    herb = { HexToRGB("#40B0A6") },
+    ore = { HexToRGB("#FFC20A") },
+    lumber = { HexToRGB("#5D3A9B") },
+  },
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_tritanopia"] = {
+    fish = { HexToRGB("#005AB5") },
+    herb = { HexToRGB("#29AF7F") },
+    ore = { HexToRGB("#E1BE6A") },
+    lumber = { HexToRGB("#8E5DCC") },
+  },
+}
+
 local function GetUseGlobal()
   ColTrackDB = ColTrackDB or {}
   if ColTrackDB.useGlobal == nil then
@@ -102,6 +176,77 @@ local function MinimapConfig()
     mm.hide = false
   end
   return mm
+end
+
+local function GetUndermineOverlayEnabled()
+  ColTrackDB = ColTrackDB or {}
+  if ColTrackDB.enableUndermineOverlay == nil then
+    ColTrackDB.enableUndermineOverlay = false
+  end
+  return ColTrackDB.enableUndermineOverlay
+end
+
+local function SetUndermineOverlayEnabled(v)
+  ColTrackDB = ColTrackDB or {}
+  ColTrackDB.enableUndermineOverlay = v and true or false
+end
+
+local function UndermineVignetteColorsConfig()
+  ColTrackDB = ColTrackDB or {}
+  ColTrackDB.undermineVignetteColors = ColTrackDB.undermineVignetteColors or {}
+  return ColTrackDB.undermineVignetteColors
+end
+
+local function IsAddonLoaded(name)
+  if C_AddOns and C_AddOns.IsAddOnLoaded then
+    return C_AddOns.IsAddOnLoaded(name)
+  end
+  return IsAddOnLoaded and IsAddOnLoaded(name)
+end
+
+local function TryLoadAddon(name)
+  if C_AddOns and C_AddOns.LoadAddOn then
+    local ok, reason = C_AddOns.LoadAddOn(name)
+    return ok, reason
+  end
+  return LoadAddOn(name)
+end
+
+local function IsInUndermine()
+  local mapID = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+  while mapID and mapID > 0 do
+    if UNDERMINE_MAP_IDS[mapID] then
+      return true
+    end
+    local info = C_Map.GetMapInfo(mapID)
+    if info and info.name == "Undermine" then
+      return true
+    end
+    mapID = info and info.parentMapID
+  end
+  return false
+end
+
+local function RefreshUndermineOverlayState()
+  if not GetUndermineOverlayEnabled() then
+    if _G.ColTrackVignetteOverlay_SetEnabled then
+      _G.ColTrackVignetteOverlay_SetEnabled(false)
+    end
+    return
+  end
+
+  local shouldEnable = IsInUndermine()
+  if shouldEnable and not IsAddonLoaded("ColTrack_Vignettes") then
+    local loaded, reason = TryLoadAddon("ColTrack_Vignettes")
+    if not loaded and not overlayLoadWarned then
+      overlayLoadWarned = true
+      print("ColTrack: unable to load optional module ColTrack_Vignettes (" .. tostring(reason) .. ").")
+    end
+  end
+
+  if _G.ColTrackVignetteOverlay_SetEnabled then
+    _G.ColTrackVignetteOverlay_SetEnabled(shouldEnable)
+  end
 end
 
 local function ActiveStore()
@@ -148,6 +293,36 @@ local function LoadPreset()
   end
   return normalized
 end
+
+local function GetCurrentPresetColors()
+  local colors = PRESET_COLORS[LoadPreset()]
+  if colors then
+    return colors
+  end
+  return PRESET_COLORS["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid"]
+end
+
+_G.ColTrack_GetCurrentPresetColors = GetCurrentPresetColors
+_G.ColTrack_GetCurrentPresetTexture = LoadPreset
+
+local function GetUndermineVignetteColor(kind)
+  local cfg = UndermineVignetteColorsConfig()
+  local c = cfg[kind]
+  if c and c.r and c.g and c.b then
+    return { c.r, c.g, c.b }
+  end
+
+  local fallbackKey = UNDERMINE_VIGNETTE_FALLBACK[kind] or "ore"
+  local preset = GetCurrentPresetColors()
+  return (preset and preset[fallbackKey]) or { 1, 1, 1 }
+end
+
+local function SetUndermineVignetteColor(kind, r, g, b)
+  local cfg = UndermineVignetteColorsConfig()
+  cfg[kind] = { r = r, g = g, b = b }
+end
+
+_G.ColTrack_GetUndermineVignetteColor = GetUndermineVignetteColor
 
 local function LabelForTex(tex)
   for _, p in ipairs(PRESETS) do
@@ -294,12 +469,12 @@ local function CreatePanels()
   end
 
   presetsPanel = CreateFrame("Frame")
-  presetsPanel.name = "Presets"
+  presetsPanel.name = "Tracking Presets"
   presetsPanel.parent = "ColTrack"
 
   local presetsTitle = presetsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
   presetsTitle:SetPoint("TOPLEFT", 16, -16)
-  presetsTitle:SetText("Presets Preview")
+  presetsTitle:SetText("Tracking Presets Preview")
 
   local ICON_RECTS = {
     { label = "Fish", x = 928, y = 517, w = 32, h = 32, oy = 0 },
@@ -354,6 +529,9 @@ local function CreatePanels()
       Apply(p.tex)
       SavePreset(p.tex)
       SyncPresetUI()
+      if _G.ColTrackVignetteOverlay_Refresh then
+        _G.ColTrackVignetteOverlay_Refresh()
+      end
     end)
 
     presetPreviewButtons[#presetPreviewButtons + 1] = row
@@ -385,6 +563,31 @@ local function CreatePanels()
     end
   end
 
+  minimapOptionsPanel = CreateFrame("Frame")
+  minimapOptionsPanel.name = "Minimap Options"
+  minimapOptionsPanel.parent = "ColTrack"
+
+  local minimapTitle = minimapOptionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+  minimapTitle:SetPoint("TOPLEFT", 16, -16)
+  minimapTitle:SetText("Minimap Options")
+
+  local showMinimap = CreateFrame("CheckButton", nil, minimapOptionsPanel, "InterfaceOptionsCheckButtonTemplate")
+  showMinimap:SetPoint("TOPLEFT", minimapTitle, "BOTTOMLEFT", 0, -12)
+  showMinimap.Text:SetText("Show minimap button")
+  showMinimap:SetChecked(not MinimapConfig().hide)
+  showMinimap:SetScript("OnClick", function(self)
+    local mm = MinimapConfig()
+    mm.hide = not self:GetChecked()
+    local ldbi = LibStub("LibDBIcon-1.0", true)
+    if ldbi then
+      if mm.hide then
+        ldbi:Hide("ColTrack")
+      else
+        ldbi:Show("ColTrack")
+      end
+    end
+  end)
+
   profilesPanel = CreateFrame("Frame")
   profilesPanel.name = "Profiles"
   profilesPanel.parent = "ColTrack"
@@ -405,25 +608,8 @@ local function CreatePanels()
     SyncPresetUI()
   end)
 
-  local showMinimap = CreateFrame("CheckButton", nil, profilesPanel, "InterfaceOptionsCheckButtonTemplate")
-  showMinimap:SetPoint("TOPLEFT", globalCheck, "BOTTOMLEFT", 0, -8)
-  showMinimap.Text:SetText("Show minimap button")
-  showMinimap:SetChecked(not MinimapConfig().hide)
-  showMinimap:SetScript("OnClick", function(self)
-    local mm = MinimapConfig()
-    mm.hide = not self:GetChecked()
-    local ldbi = LibStub("LibDBIcon-1.0", true)
-    if ldbi then
-      if mm.hide then
-        ldbi:Hide("ColTrack")
-      else
-        ldbi:Show("ColTrack")
-      end
-    end
-  end)
-
   local profileLabel = profilesPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-  profileLabel:SetPoint("TOPLEFT", showMinimap, "BOTTOMLEFT", 0, -8)
+  profileLabel:SetPoint("TOPLEFT", globalCheck, "BOTTOMLEFT", 0, -8)
   profileLabel:SetText("Profile")
 
   profileDropdown = CreateFrame("Frame", "ColTrackProfileDropdown", profilesPanel, "UIDropDownMenuTemplate")
@@ -458,16 +644,153 @@ local function CreatePanels()
   UIDropDownMenu_SetText(profileDropdown, store.currentProfile)
   SyncPresetUI()
 
+  vignettesPanel = CreateFrame("Frame")
+  vignettesPanel.name = "Undermine Vignettes"
+  vignettesPanel.parent = "ColTrack"
+
+  local function OpenColorPicker(initial, onChanged)
+    if not ColorPickerFrame then
+      return
+    end
+
+    if ColorPickerFrame.SetupColorPickerAndShow then
+      local info = {
+        r = initial[1],
+        g = initial[2],
+        b = initial[3],
+        hasOpacity = false,
+        swatchFunc = function()
+          local r, g, b = ColorPickerFrame:GetColorRGB()
+          onChanged(r, g, b)
+        end,
+        cancelFunc = function(prev)
+          if prev then
+            onChanged(prev.r, prev.g, prev.b)
+          end
+        end,
+      }
+      ColorPickerFrame:SetupColorPickerAndShow(info)
+      return
+    end
+
+    ColorPickerFrame:SetColorRGB(initial[1], initial[2], initial[3])
+    ColorPickerFrame.hasOpacity = false
+    ColorPickerFrame.opacity = 0
+    ColorPickerFrame.previousValues = { r = initial[1], g = initial[2], b = initial[3] }
+    ColorPickerFrame.func = function()
+      local r, g, b = ColorPickerFrame:GetColorRGB()
+      onChanged(r, g, b)
+    end
+    ColorPickerFrame.cancelFunc = function(prev)
+      onChanged(prev.r, prev.g, prev.b)
+    end
+    ColorPickerFrame:Show()
+  end
+
+  local vigTitle = vignettesPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+  vigTitle:SetPoint("TOPLEFT", 16, -16)
+  vigTitle:SetText("Undermine Vignettes")
+
+  local undermineOverlay = CreateFrame("CheckButton", nil, vignettesPanel, "InterfaceOptionsCheckButtonTemplate")
+  undermineOverlay:SetPoint("TOPLEFT", vigTitle, "BOTTOMLEFT", 0, -12)
+  undermineOverlay.Text:SetText("Enable Undermine vignette recolor overlay")
+  undermineOverlay:SetChecked(GetUndermineOverlayEnabled())
+  undermineOverlay:SetScript("OnClick", function(self)
+    SetUndermineOverlayEnabled(self:GetChecked())
+    RefreshUndermineOverlayState()
+  end)
+
+  local colorsLabel = vignettesPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+  colorsLabel:SetPoint("TOPLEFT", undermineOverlay, "BOTTOMLEFT", 24, -4)
+  colorsLabel:SetText("Custom colors")
+
+  local function CreateUndermineColorPickerRow(anchor, labelText, kind)
+    local row = CreateFrame("Frame", nil, vignettesPanel)
+    row:SetSize(430, 22)
+    row:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -6)
+
+    local label = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+    label:SetPoint("LEFT", row, "LEFT", 0, 0)
+    label:SetWidth(180)
+    label:SetJustifyH("LEFT")
+    label:SetText(labelText)
+
+    local button = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+    button:SetSize(72, 20)
+    button:SetPoint("LEFT", label, "RIGHT", 8, 0)
+    button:SetText("Color")
+
+    local swatchBG = row:CreateTexture(nil, "BORDER")
+    swatchBG:SetSize(32, 16)
+    swatchBG:SetPoint("LEFT", button, "RIGHT", 10, 0)
+    swatchBG:SetColorTexture(0, 0, 0, 1)
+
+    local swatch = row:CreateTexture(nil, "ARTWORK")
+    swatch:SetSize(28, 12)
+    swatch:SetPoint("CENTER", swatchBG, "CENTER", 0, 0)
+
+    local borderTop = row:CreateTexture(nil, "OVERLAY")
+    borderTop:SetColorTexture(1, 1, 1, 0.85)
+    borderTop:SetHeight(1)
+    borderTop:SetPoint("TOPLEFT", swatchBG, "TOPLEFT", 0, 0)
+    borderTop:SetPoint("TOPRIGHT", swatchBG, "TOPRIGHT", 0, 0)
+
+    local borderBottom = row:CreateTexture(nil, "OVERLAY")
+    borderBottom:SetColorTexture(1, 1, 1, 0.85)
+    borderBottom:SetHeight(1)
+    borderBottom:SetPoint("BOTTOMLEFT", swatchBG, "BOTTOMLEFT", 0, 0)
+    borderBottom:SetPoint("BOTTOMRIGHT", swatchBG, "BOTTOMRIGHT", 0, 0)
+
+    local borderLeft = row:CreateTexture(nil, "OVERLAY")
+    borderLeft:SetColorTexture(1, 1, 1, 0.85)
+    borderLeft:SetWidth(1)
+    borderLeft:SetPoint("TOPLEFT", swatchBG, "TOPLEFT", 0, 0)
+    borderLeft:SetPoint("BOTTOMLEFT", swatchBG, "BOTTOMLEFT", 0, 0)
+
+    local borderRight = row:CreateTexture(nil, "OVERLAY")
+    borderRight:SetColorTexture(1, 1, 1, 0.85)
+    borderRight:SetWidth(1)
+    borderRight:SetPoint("TOPRIGHT", swatchBG, "TOPRIGHT", 0, 0)
+    borderRight:SetPoint("BOTTOMRIGHT", swatchBG, "BOTTOMRIGHT", 0, 0)
+
+    local function RefreshSwatch()
+      local c = GetUndermineVignetteColor(kind)
+      swatch:SetColorTexture(c[1], c[2], c[3], 1)
+    end
+
+    button:SetScript("OnClick", function()
+      local c = GetUndermineVignetteColor(kind)
+      OpenColorPicker(c, function(r, g, b)
+        SetUndermineVignetteColor(kind, r, g, b)
+        RefreshSwatch()
+        if _G.ColTrackVignetteOverlay_Refresh then
+          _G.ColTrackVignetteOverlay_Refresh()
+        end
+      end)
+    end)
+
+    RefreshSwatch()
+    return row
+  end
+
+  local rowTrash = CreateUndermineColorPickerRow(colorsLabel, "Shiny Trash Can", "trashcan")
+  local rowDump = CreateUndermineColorPickerRow(rowTrash, "Overflowing Dumpster", "dumpster")
+  CreateUndermineColorPickerRow(rowDump, "One-time Treasures", "treasure")
+
   if Settings and Settings.RegisterCanvasLayoutCategory then
     category = Settings.RegisterCanvasLayoutCategory(rootPanel, "ColTrack")
     Settings.RegisterAddOnCategory(category)
     if Settings.RegisterCanvasLayoutSubcategory then
-      Settings.RegisterCanvasLayoutSubcategory(category, presetsPanel, "Presets")
+      Settings.RegisterCanvasLayoutSubcategory(category, presetsPanel, "Tracking Presets")
+      Settings.RegisterCanvasLayoutSubcategory(category, minimapOptionsPanel, "Minimap Options")
+      Settings.RegisterCanvasLayoutSubcategory(category, vignettesPanel, "Undermine Vignettes")
       Settings.RegisterCanvasLayoutSubcategory(category, profilesPanel, "Profiles")
     end
   else
     InterfaceOptions_AddCategory(rootPanel)
     InterfaceOptions_AddCategory(presetsPanel)
+    InterfaceOptions_AddCategory(minimapOptionsPanel)
+    InterfaceOptions_AddCategory(vignettesPanel)
     InterfaceOptions_AddCategory(profilesPanel)
   end
 end
@@ -476,16 +799,21 @@ local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("MINIMAP_UPDATE_TRACKING")
+f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 f:SetScript("OnEvent", function(_, event)
   if event == "PLAYER_LOGIN" then
     Apply(LoadPreset())
     CreatePanels()
     InitMinimapIcon()
+    RefreshUndermineOverlayState()
     return
   end
 
   -- Tracking updates and zone loads can reset minimap blip texture.
   Apply(LoadPreset())
+  if event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" then
+    RefreshUndermineOverlayState()
+  end
   if C_Timer and C_Timer.After then
     C_Timer.After(0, function()
       Apply(LoadPreset())

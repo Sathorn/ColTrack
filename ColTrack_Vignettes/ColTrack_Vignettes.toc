@@ -1,0 +1,10 @@
+## Interface: 120001
+## Title: ColTrack - Vignettes
+## Notes: Optional Undermine vignette recolor overlay for ColTrack
+## Author: Sathorn
+## Version: 0.30.5-beta5
+## LoadOnDemand: 1
+## RequiredDeps: ColTrack
+## OptionalDeps: HereBeDragons, HereBeDragons-Pins-2.0
+
+ColTrack_Vignettes.lua

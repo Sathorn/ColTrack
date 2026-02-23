@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.30.5-beta5
+- Added optional Undermine vignette recolor support using a load-on-demand module (`ColTrack_Vignettes`).
+- Added auto-load behavior for the vignette module when enabled and entering Undermine.
+- Added separate settings tabs and ordering updates:
+  - `Tracking Presets`
+  - `Minimap Options`
+  - `Undermine Vignettes`
+  - `Profiles` (kept last)
+- Added configurable colors for Undermine vignette groups:
+  - `Shiny Trash Can`
+  - `Overflowing Dumpster`
+  - `One-time Treasures`
+- Added legacy preset ID normalization and minimap texture reapply hardening on world/tracking updates.
+- Replaced vivid blue preset variant with:
+  - `Vivid: Fish Blue / Herb Lime / Ore Yellow / Lumber Hot Pink`
+
 ## v0.30.5-beta4
 - Replaced `Vivid: Fish Blue / Herb Green / Ore Yellow / Lumber Pink` with:
   - `Vivid: Fish Blue / Herb Lime / Ore Yellow / Lumber Hot Pink`
