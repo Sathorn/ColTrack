@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.30.5-beta7
+- Limited Undermine vignette recolor scope to only the intended targets:
+  - `Shiny Trash Can`
+  - `Overflowing Dumpster` / `Overflowing Dampster`
+  - one-time treasures (`VignetteLoot`)
+- Prevented unrelated vignette icons from being recolored.
+
 ## v0.30.5-beta6
 - Added explicit dependency note for Undermine vignette overlay in the in-game settings tab.
 - Updated README and docs to document `HereBeDragons` requirement for `ColTrack_Vignettes`.
