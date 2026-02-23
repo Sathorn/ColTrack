@@ -2,7 +2,7 @@
 ## Title: ColTrack
 ## Notes: Minimap tracking icon color presets
 ## Author: Sathorn
-## Version: 0.30.5-beta5
+## Version: 0.30.5-beta6
 ## IconTexture: Interface\AddOns\ColTrack\Images\log
 ## SavedVariables: ColTrackDB
 ## SavedVariablesPerCharacter: ColTrackDBPC

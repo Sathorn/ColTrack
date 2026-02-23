@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.30.5-beta6
+- Added explicit dependency note for Undermine vignette overlay in the in-game settings tab.
+- Updated README and docs to document `HereBeDragons` requirement for `ColTrack_Vignettes`.
+- Kept optional module behavior unchanged (only needed for Undermine vignette recolor).
+
 ## v0.30.5-beta5
 - Added optional Undermine vignette recolor support using a load-on-demand module (`ColTrack_Vignettes`).
 - Added auto-load behavior for the vignette module when enabled and entering Undermine.

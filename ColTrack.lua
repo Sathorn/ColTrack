@@ -700,8 +700,13 @@ local function CreatePanels()
     RefreshUndermineOverlayState()
   end)
 
+  local undermineDep = vignettesPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+  undermineDep:SetPoint("TOPLEFT", undermineOverlay, "BOTTOMLEFT", 24, -2)
+  undermineDep:SetText("Requires HereBeDragons (HereBeDragons-Pins-2.0).")
+  undermineDep:SetTextColor(0.8, 0.8, 0.8, 1)
+
   local colorsLabel = vignettesPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-  colorsLabel:SetPoint("TOPLEFT", undermineOverlay, "BOTTOMLEFT", 24, -4)
+  colorsLabel:SetPoint("TOPLEFT", undermineDep, "BOTTOMLEFT", 0, -6)
   colorsLabel:SetText("Custom colors")
 
   local function CreateUndermineColorPickerRow(anchor, labelText, kind)
