@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.40.0
+- Promoted the `0.30.5-beta` series to stable `0.40.0`.
+- Added optional Undermine vignette recolor module (`ColTrack_Vignettes`) with load-on-demand behavior.
+- Added dedicated Undermine settings with configurable colors for:
+  - `Shiny Trash Can`
+  - `Overflowing Dumpster` / `Overflowing Dampster`
+  - `One-time Treasures`
+- Limited vignette recolors strictly to supported Undermine targets to avoid affecting unrelated icons.
+- Expanded tracking presets with vivid and accessibility variants, including:
+  - `Vivid: Fish Magenta / Herb Lime / Ore Cyan / Lumber Gold`
+  - `Vivid: Fish Blue / Herb Lime / Ore Yellow / Lumber Hot Pink`
+  - `Deuteranomaly`
+  - `Deuteranopia`
+  - `Protanopia`
+  - `Tritanopia`
+  - `White Outline / Black Fill`
+- Improved presets UI and ordering:
+  - `Tracking Presets`
+  - `Minimap Options`
+  - `Undermine Vignettes`
+  - `Profiles`
+- Added preset/profile migration hardening and minimap texture reapply safeguards on world/tracking updates.
+- Optimized atlas assets by switching preset textures to `.blp` and removing legacy `.tga` variants.
+- Updated TOCs, README, and docs version references to `0.40.0`.
+
 ## v0.30.5-beta7
 - Limited Undermine vignette recolor scope to only the intended targets:
   - `Shiny Trash Can`
