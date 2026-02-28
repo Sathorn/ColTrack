@@ -2,7 +2,7 @@
 ## Title: ColTrack - Vignettes
 ## Notes: Optional Undermine vignette recolor overlay for ColTrack
 ## Author: Sathorn
-## Version: 0.40.0
+## Version: 0.40.1
 ## LoadOnDemand: 1
 ## RequiredDeps: ColTrack
 ## OptionalDeps: HereBeDragons, HereBeDragons-Pins-2.0

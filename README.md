@@ -5,7 +5,7 @@ ColTrack is a World of Warcraft addon that changes minimap tracking icon colors 
 It is built to make tracked node types easier to distinguish at a glance (Fish, Herb, Ore, Lumber), with profile support and quick switching from the minimap.
 
 ## Current Version
-`0.40.0`
+`0.40.1`
 
 ## Versioning Policy
 - Minor release: increase third number (`0.30.0 -> 0.30.1`).
@@ -28,7 +28,8 @@ It is built to make tracked node types easier to distinguish at a glance (Fish, 
 ## Presets Included
 - `Base (Blizzard)`
 - `Fish Pink / Herb Green / Ore Blue / Lumber Yellow`
-- `Vivid: Fish Magenta / Herb Lime / Ore Cyan / Lumber Gold`
+- `Vivid: Fish Hot Pink / Herb Lime / Ore Blue / Lumber Yellow`
+- `Vivid: Fish Yellow / Herb Green / Ore Blue / Lumber Pink`
 - `Fish Blue / Herb Green / Ore Yellow / Lumber Pink`
 - `Vivid: Fish Blue / Herb Lime / Ore Yellow / Lumber Hot Pink`
 - `Deuteranomaly`

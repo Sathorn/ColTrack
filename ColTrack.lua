@@ -37,8 +37,12 @@ local PRESETS = {
     tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_fishPink_herbGreen_oreBlue_lumberYellow",
   },
   {
-    label = "Vivid: Fish Magenta / Herb Lime / Ore Cyan / Lumber Gold",
-    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid",
+    label = "Vivid: Fish Hot Pink / Herb Lime / Ore Blue / Lumber Yellow",
+    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid_fishHotPink_herbLime_oreBlue_lumberYellow",
+  },
+  {
+    label = "Vivid: Fish Yellow / Herb Green / Ore Blue / Lumber Pink",
+    tex = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_fishYellow_herbGreen_oreBlue_lumberPink_vivid",
   },
   {
     label = "Fish Blue / Herb Green / Ore Yellow / Lumber Pink",
@@ -74,7 +78,8 @@ local LEGACY_TEX_MAP = {
   ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_colorblindRG"] = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_deuteranopia",
   ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_colorblindBY"] = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_tritanopia",
   ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_colorblindCommunity"] = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_cb_deuteranomaly",
-  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid_blp"] = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid",
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid_blp"] = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid_fishHotPink_herbLime_oreBlue_lumberYellow",
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid"] = "Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid_fishHotPink_herbLime_oreBlue_lumberYellow",
 }
 
 local VALID_TEX = {}
@@ -118,10 +123,22 @@ local PRESET_COLORS = {
     lumber = { HexToRGB("#FF69B4") },
   },
   ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid"] = {
-    fish = { HexToRGB("#FF2FB2") },
-    herb = { HexToRGB("#7CFF00") },
-    ore = { HexToRGB("#00CFFF") },
-    lumber = { HexToRGB("#FFD200") },
+    fish = { HexToRGB("#FF00A0") },
+    herb = { HexToRGB("#35FF00") },
+    ore = { HexToRGB("#0091FF") },
+    lumber = { HexToRGB("#FDFF00") },
+  },
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_vivid_fishHotPink_herbLime_oreBlue_lumberYellow"] = {
+    fish = { HexToRGB("#FF00A0") },
+    herb = { HexToRGB("#35FF00") },
+    ore = { HexToRGB("#0091FF") },
+    lumber = { HexToRGB("#FDFF00") },
+  },
+  ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_fishYellow_herbGreen_oreBlue_lumberPink_vivid"] = {
+    fish = { HexToRGB("#FDFF00") },
+    herb = { HexToRGB("#35FF00") },
+    ore = { HexToRGB("#0091FF") },
+    lumber = { HexToRGB("#FF00A0") },
   },
   ["Interface\\AddOns\\ColTrack\\Textures\\ObjectIconsAtlas_fishBlue_herbLime_oreYellow_lumberHotPink"] = {
     fish = { HexToRGB("#0091FF") },

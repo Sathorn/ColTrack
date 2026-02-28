@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.40.1
+- Added new vivid preset:
+  - `Vivid: Fish Yellow / Herb Green / Ore Blue / Lumber Pink`
+- Normalized vivid palette rendering so all vivid presets share the same color set and brightness profile, with only icon-to-color order changed between presets.
+- Updated vivid preset naming/docs for consistency:
+  - `Vivid: Fish Hot Pink / Herb Lime / Ore Blue / Lumber Yellow`
+- Added texture assets for the new/reworked vivid presets.
+- Updated TOC/README/docs version references to `0.40.1`.
+
 ## v0.40.0
 - Promoted the `0.30.5-beta` series to stable `0.40.0`.
 - Added optional Undermine vignette recolor module (`ColTrack_Vignettes`) with load-on-demand behavior.
