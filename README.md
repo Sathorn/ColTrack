@@ -5,11 +5,11 @@ ColTrack is a World of Warcraft addon that changes minimap tracking icon colors 
 It is built to make tracked node types easier to distinguish at a glance (Fish, Herb, Ore, Lumber), with profile support and quick switching from the minimap.
 
 ## Current Version
-`0.40.1`
+`1.0.0`
 
 ## Versioning Policy
-- Minor release: increase third number (`0.30.0 -> 0.30.1`).
-- Major release: increase second number and reset third (`0.30.x -> 0.31.0`).
+- Patch release: increase third number (`1.0.0 -> 1.0.1`).
+- Minor release: increase second number and reset third (`1.0.1 -> 1.1.0`).
 
 ## What The Addon Does
 - Replaces minimap tracking icon atlas with selected preset.

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.0
+- Promoted ColTrack to `1.0.0`.
+- Updated addon metadata and docs version references to `1.0.0`.
+
 ## v0.40.1
 - Added new vivid preset:
   - `Vivid: Fish Yellow / Herb Green / Ore Blue / Lumber Pink`
