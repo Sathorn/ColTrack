@@ -1,6 +1,7 @@
 local ADDON = ...
 local BASE = "Interface\\Minimap\\ObjectIconsAtlas"
 local ICON = "Interface\\AddOns\\ColTrack\\Images\\logIcon.tga"
+local CUSTOM_ATLAS_TOC = 120005
 
 local rootPanel
 local category
@@ -13,6 +14,11 @@ local presetDropdown
 local ldbObject
 local presetPreviewButtons = {}
 local overlayLoadWarned
+local atlasCompatibilityWarned
+local probeEnabled
+local probeHooked
+local probeLastText
+local probeLastAt
 
 local UNDERMINE_MAP_IDS = {
   -- Keep both parent/child IDs when known to handle micro-dungeons.
@@ -95,8 +101,39 @@ local function NormalizeTex(tex)
   return BASE
 end
 
+local function GetCurrentTocVersion()
+  local tocVersion = select(4, GetBuildInfo())
+  return tonumber(tocVersion) or 0
+end
+
+local function IsCustomAtlasCompatible()
+  local tocVersion = GetCurrentTocVersion()
+  return tocVersion > 0 and tocVersion <= CUSTOM_ATLAS_TOC
+end
+
+local function GetAllowUnsupportedAtlas()
+  ColTrackDB = ColTrackDB or {}
+  if ColTrackDB.allowUnsupportedAtlas == nil then
+    ColTrackDB.allowUnsupportedAtlas = false
+  end
+  return ColTrackDB.allowUnsupportedAtlas
+end
+
+local function SetAllowUnsupportedAtlas(v)
+  ColTrackDB = ColTrackDB or {}
+  ColTrackDB.allowUnsupportedAtlas = v and true or false
+end
+
 local function Apply(tex)
   if Minimap and Minimap.SetBlipTexture then
+    if tex ~= BASE and not IsCustomAtlasCompatible() and not GetAllowUnsupportedAtlas() then
+      if not atlasCompatibilityWarned then
+        atlasCompatibilityWarned = true
+        print(("ColTrack: custom tracking presets are disabled for this WoW client because Blizzard changed the minimap icon atlas after %s. Using Base (Blizzard) to avoid corrupting unrelated icons."):format(CUSTOM_ATLAS_TOC))
+      end
+      Minimap:SetBlipTexture(BASE)
+      return
+    end
     Minimap:SetBlipTexture(tex)
   end
 end
@@ -195,6 +232,19 @@ local function MinimapConfig()
   return mm
 end
 
+local function GetDebugProbeEnabled()
+  ColTrackDB = ColTrackDB or {}
+  if ColTrackDB.debugProbeEnabled == nil then
+    ColTrackDB.debugProbeEnabled = false
+  end
+  return ColTrackDB.debugProbeEnabled
+end
+
+local function SetDebugProbeEnabled(v)
+  ColTrackDB = ColTrackDB or {}
+  ColTrackDB.debugProbeEnabled = v and true or false
+end
+
 local function GetUndermineOverlayEnabled()
   ColTrackDB = ColTrackDB or {}
   if ColTrackDB.enableUndermineOverlay == nil then
@@ -263,6 +313,129 @@ local function RefreshUndermineOverlayState()
 
   if _G.ColTrackVignetteOverlay_SetEnabled then
     _G.ColTrackVignetteOverlay_SetEnabled(shouldEnable)
+  end
+end
+
+local function ProbePrint(msg)
+  print("ColTrack Probe: " .. msg)
+end
+
+local function ProbeHookTooltip()
+  if probeHooked or not GameTooltip then
+    return
+  end
+
+  probeHooked = true
+  GameTooltip:HookScript("OnShow", function(tt)
+    if not probeEnabled or not Minimap or not MouseIsOver(Minimap) then
+      return
+    end
+
+    local text = GameTooltipTextLeft1 and GameTooltipTextLeft1:GetText()
+    if not text or text == "" then
+      return
+    end
+
+    local now = GetTime and GetTime() or 0
+    if text == probeLastText and probeLastAt and (now - probeLastAt) < 0.75 then
+      return
+    end
+
+    probeLastText = text
+    probeLastAt = now
+
+    local owner = tt:GetOwner()
+    local ownerName = owner and owner.GetName and owner:GetName() or "unknown"
+    ProbePrint(("minimap tooltip: '%s' (owner=%s)"):format(text, tostring(ownerName)))
+  end)
+end
+
+local function ProbeScanMinimapChildren()
+  if not Minimap then
+    ProbePrint("Minimap frame unavailable.")
+    return
+  end
+
+  local children = { Minimap:GetChildren() }
+  local textureStats = {}
+  local totalTextures = 0
+
+  for _, child in ipairs(children) do
+    local regions = { child:GetRegions() }
+    for _, region in ipairs(regions) do
+      if region and region.GetObjectType and region:GetObjectType() == "Texture" then
+        local atlas = region.GetAtlas and region:GetAtlas() or nil
+        local tex = region.GetTexture and region:GetTexture() or nil
+        if atlas or tex then
+          totalTextures = totalTextures + 1
+          local texKey = (atlas and ("atlas:" .. atlas)) or (type(tex) == "string" and ("tex:" .. tex) or ("tex:" .. tostring(tex)))
+          textureStats[texKey] = (textureStats[texKey] or 0) + 1
+        end
+      end
+    end
+  end
+
+  ProbePrint(("children=%d, textured_regions=%d"):format(#children, totalTextures))
+
+  local rows = {}
+  for key, count in pairs(textureStats) do
+    rows[#rows + 1] = { key = key, count = count }
+  end
+  table.sort(rows, function(a, b)
+    if a.count == b.count then
+      return a.key < b.key
+    end
+    return a.count > b.count
+  end)
+
+  local shown = math.min(#rows, 12)
+  for i = 1, shown do
+    ProbePrint(("[%d] %s (x%d)"):format(i, rows[i].key, rows[i].count))
+  end
+end
+
+local function RegisterProbeSlash()
+  if SlashCmdList.COLTRACKPROBE then
+    return
+  end
+
+  SLASH_COLTRACKPROBE1 = "/coltrackprobe"
+  SLASH_COLTRACKPROBE2 = "/ctprobe"
+  SlashCmdList.COLTRACKPROBE = function(msg)
+    local arg = strlower(strtrim(msg or ""))
+    if arg == "" or arg == "help" then
+      ProbePrint("commands: /ctprobe on | off | status | scan")
+      ProbePrint("while ON, hovering minimap icons prints tooltip names to chat.")
+      return
+    end
+    if arg == "on" then
+      if not GetDebugProbeEnabled() then
+        ProbePrint("disabled in options. Enable 'Debug: allow /ctprobe commands' first.")
+        return
+      end
+      probeEnabled = true
+      ProbeHookTooltip()
+      ProbePrint("enabled.")
+      return
+    end
+    if arg == "off" then
+      probeEnabled = false
+      ProbePrint("disabled.")
+      return
+    end
+    if arg == "status" then
+      ProbePrint("status: " .. (probeEnabled and "ON" or "OFF"))
+      return
+    end
+    if arg == "scan" then
+      if not GetDebugProbeEnabled() then
+        ProbePrint("disabled in options. Enable 'Debug: allow /ctprobe commands' first.")
+        return
+      end
+      ProbeScanMinimapChildren()
+      return
+    end
+    ProbePrint("unknown command. use /ctprobe help")
   end
 end
 
@@ -493,6 +666,17 @@ local function CreatePanels()
   presetsTitle:SetPoint("TOPLEFT", 16, -16)
   presetsTitle:SetText("Tracking Presets Preview")
 
+  local atlasStatus = presetsPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+  atlasStatus:SetPoint("TOPLEFT", presetsTitle, "BOTTOMLEFT", 0, -6)
+  atlasStatus:SetWidth(560)
+  atlasStatus:SetJustifyH("LEFT")
+  if IsCustomAtlasCompatible() or GetAllowUnsupportedAtlas() then
+    atlasStatus:SetText("")
+  else
+    atlasStatus:SetText(("Custom presets are temporarily disabled on this WoW client because the minimap atlas changed after %s. Base (Blizzard) is used for safety."):format(CUSTOM_ATLAS_TOC))
+    atlasStatus:SetTextColor(1, 0.82, 0, 1)
+  end
+
   local ICON_RECTS = {
     { label = "Fish", x = 928, y = 517, w = 32, h = 32, oy = 0 },
     { label = "Herb", x = 963, y = 520, w = 32, h = 32, oy = 0 },
@@ -560,7 +744,7 @@ local function CreatePanels()
     h:SetText(text)
   end
 
-  local y = -14
+  local y = atlasStatus:GetText() ~= "" and -46 or -14
   CreateSectionHeader("Standard Presets", y)
   y = y - 28
   for _, p in ipairs(PRESETS) do
@@ -604,6 +788,41 @@ local function CreatePanels()
       end
     end
   end)
+
+  local unsafeAtlas = CreateFrame("CheckButton", nil, minimapOptionsPanel, "InterfaceOptionsCheckButtonTemplate")
+  unsafeAtlas:SetPoint("TOPLEFT", showMinimap, "BOTTOMLEFT", 0, -8)
+  unsafeAtlas.Text:SetText("Allow custom presets on unsupported WoW client (unsafe)")
+  unsafeAtlas:SetChecked(GetAllowUnsupportedAtlas())
+  unsafeAtlas:SetScript("OnClick", function(self)
+    SetAllowUnsupportedAtlas(self:GetChecked())
+    atlasCompatibilityWarned = false
+    Apply(LoadPreset())
+  end)
+
+  local unsafeAtlasHint = minimapOptionsPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+  unsafeAtlasHint:SetPoint("TOPLEFT", unsafeAtlas, "BOTTOMLEFT", 24, -2)
+  unsafeAtlasHint:SetWidth(520)
+  unsafeAtlasHint:SetJustifyH("LEFT")
+  unsafeAtlasHint:SetText("Use only for diagnostics. Unsupported atlas presets can change unrelated icons such as chests, traps, or stable masters.")
+  unsafeAtlasHint:SetTextColor(0.8, 0.8, 0.8, 1)
+
+  local debugProbe = CreateFrame("CheckButton", nil, minimapOptionsPanel, "InterfaceOptionsCheckButtonTemplate")
+  debugProbe:SetPoint("TOPLEFT", unsafeAtlasHint, "BOTTOMLEFT", -24, -8)
+  debugProbe.Text:SetText("Debug: allow /ctprobe commands")
+  debugProbe:SetChecked(GetDebugProbeEnabled())
+  debugProbe:SetScript("OnClick", function(self)
+    local enabled = self:GetChecked()
+    SetDebugProbeEnabled(enabled)
+    if not enabled and probeEnabled then
+      probeEnabled = false
+      ProbePrint("auto-disabled because debug option was turned off.")
+    end
+  end)
+
+  local debugProbeHint = minimapOptionsPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+  debugProbeHint:SetPoint("TOPLEFT", debugProbe, "BOTTOMLEFT", 24, -2)
+  debugProbeHint:SetText("Advanced diagnostics for minimap icon API checks.")
+  debugProbeHint:SetTextColor(0.8, 0.8, 0.8, 1)
 
   profilesPanel = CreateFrame("Frame")
   profilesPanel.name = "Profiles"
@@ -825,6 +1044,7 @@ f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 f:SetScript("OnEvent", function(_, event)
   if event == "PLAYER_LOGIN" then
     Apply(LoadPreset())
+    RegisterProbeSlash()
     CreatePanels()
     InitMinimapIcon()
     RefreshUndermineOverlayState()

@@ -4,6 +4,7 @@ scripts/
 recolor_atlas.py
 SESSION_NOTES.txt
 AGENTS.md
+.codex/
 __pycache__/
 *.pyc
 

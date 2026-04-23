@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.1
+- Fixed 12.0.5 compatibility after Blizzard changed minimap icon atlas contents.
+- Regenerated all active ColTrack atlas presets from the current 12.0.5 `ObjectIconsAtlas` (`12.0.5.67165`, FileDataID `1121272`).
+- Preserved Blizzard's updated unrelated minimap icons, including treasure chests, Prey traps, and Stable Master.
+- Added a client atlas compatibility guard so custom presets are disabled on future unsupported atlas versions instead of corrupting unrelated icons.
+- Added an unsafe diagnostic override for testing custom presets on unsupported clients.
+- Updated addon Interface metadata to `120005`.
+- Removed stale duplicate atlas assets.
+
 ## v1.0.0
 - Promoted ColTrack to `1.0.0`.
 - Updated addon metadata and docs version references to `1.0.0`.
