@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+- Added in-game version text on the main ColTrack options page.
+- Added support for a local build suffix so locally synced test builds can display `a` (for example `1.0.1a`) without changing packaged release metadata.
+- Expanded `.pkgmeta` ignores to keep local-only development files out of packaged releases.
+
 ## v1.0.1
 - Fixed 12.0.5 compatibility after Blizzard changed minimap icon atlas contents.
 - Regenerated all active ColTrack atlas presets from the current 12.0.5 `ObjectIconsAtlas` (`12.0.5.67165`, FileDataID `1121272`).

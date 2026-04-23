@@ -2,6 +2,7 @@ local ADDON = ...
 local BASE = "Interface\\Minimap\\ObjectIconsAtlas"
 local ICON = "Interface\\AddOns\\ColTrack\\Images\\logIcon.tga"
 local CUSTOM_ATLAS_TOC = 120005
+local VERSION = C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata(ADDON, "Version") or GetAddOnMetadata(ADDON, "Version") or "unknown"
 
 local rootPanel
 local category
@@ -19,6 +20,14 @@ local probeEnabled
 local probeHooked
 local probeLastText
 local probeLastAt
+
+local function GetBuildSuffix()
+  return _G.ColTrackLocalBuildSuffix or ""
+end
+
+local function GetDisplayVersion()
+  return VERSION .. GetBuildSuffix()
+end
 
 local UNDERMINE_MAP_IDS = {
   -- Keep both parent/child IDs when known to handle micro-dungeons.
@@ -628,8 +637,13 @@ local function CreatePanels()
   rootPanel.title:SetPoint("TOPLEFT", 16, -16)
   rootPanel.title:SetText("ColTrack")
 
+  rootPanel.version = rootPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+  rootPanel.version:SetPoint("TOPLEFT", rootPanel.title, "BOTTOMLEFT", 0, -6)
+  rootPanel.version:SetText("Version: " .. GetDisplayVersion())
+  rootPanel.version:SetTextColor(0.9, 0.9, 0.9, 1)
+
   rootPanel.desc = rootPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-  rootPanel.desc:SetPoint("TOPLEFT", rootPanel.title, "BOTTOMLEFT", 0, -8)
+  rootPanel.desc:SetPoint("TOPLEFT", rootPanel.version, "BOTTOMLEFT", 0, -8)
   rootPanel.desc:SetText("Configure minimap tracking presets and profiles.")
 
   if not StaticPopupDialogs["COLTRACK_NEW_PROFILE"] then

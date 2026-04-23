@@ -4,8 +4,11 @@ move-folders:
   ColTrack/ColTrack_Vignettes: ColTrack_Vignettes
 
 ignore:
+  - .codex
   - .github
+  - AGENTS.md
   - docs
+  - local_notes
   - SESSION_NOTES.txt
   - scripts
   - recolor_atlas.py
