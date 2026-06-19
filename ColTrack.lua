@@ -2,10 +2,26 @@ local ADDON = ...
 local BASE = "Interface\\Minimap\\ObjectIconsAtlas"
 local ICON = "Interface\\AddOns\\ColTrack\\Images\\logIcon.tga"
 local CUSTOM_ATLAS_TOC = 120005
-local VERSION = C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata(ADDON, "Version") or GetAddOnMetadata(ADDON, "Version") or "unknown"
+local VERSION
+
+local function GetAddonVersion()
+  if VERSION then
+    return VERSION
+  end
+
+  if C_AddOns and C_AddOns.GetAddOnMetadata then
+    VERSION = C_AddOns.GetAddOnMetadata(ADDON, "Version")
+  elseif GetAddOnMetadata then
+    VERSION = GetAddOnMetadata(ADDON, "Version")
+  end
+
+  VERSION = VERSION or "unknown"
+  return VERSION
+end
 
 local rootPanel
 local category
+local unavailableApiPopup
 local presetsPanel
 local minimapOptionsPanel
 local profilesPanel
@@ -16,17 +32,14 @@ local ldbObject
 local presetPreviewButtons = {}
 local overlayLoadWarned
 local atlasCompatibilityWarned
-local probeEnabled
-local probeHooked
-local probeLastText
-local probeLastAt
+local LoadPreset
 
 local function GetBuildSuffix()
   return _G.ColTrackLocalBuildSuffix or ""
 end
 
 local function GetDisplayVersion()
-  return VERSION .. GetBuildSuffix()
+  return GetAddonVersion() .. GetBuildSuffix()
 end
 
 local UNDERMINE_MAP_IDS = {
@@ -120,6 +133,10 @@ local function IsCustomAtlasCompatible()
   return tocVersion > 0 and tocVersion <= CUSTOM_ATLAS_TOC
 end
 
+local function HasBlipTextureAPI()
+  return Minimap and Minimap.SetBlipTexture
+end
+
 local function GetAllowUnsupportedAtlas()
   ColTrackDB = ColTrackDB or {}
   if ColTrackDB.allowUnsupportedAtlas == nil then
@@ -133,9 +150,36 @@ local function SetAllowUnsupportedAtlas(v)
   ColTrackDB.allowUnsupportedAtlas = v and true or false
 end
 
+local function CanApplyCustomAtlas()
+  return HasBlipTextureAPI() and (IsCustomAtlasCompatible() or GetAllowUnsupportedAtlas())
+end
+
+local function GetSuppressUnavailableApiNotice()
+  ColTrackDB = ColTrackDB or {}
+  return ColTrackDB.suppressUnavailableApiNotice and true or false
+end
+
+local function SetSuppressUnavailableApiNotice(v)
+  ColTrackDB = ColTrackDB or {}
+  ColTrackDB.suppressUnavailableApiNotice = v and true or false
+end
+
+local function ShowUnavailableApiNotice()
+  if HasBlipTextureAPI() or GetSuppressUnavailableApiNotice() then
+    return
+  end
+  if unavailableApiPopup then
+    unavailableApiPopup:Show()
+  end
+end
+
 local function Apply(tex)
+  if not HasBlipTextureAPI() then
+    return
+  end
+
   if Minimap and Minimap.SetBlipTexture then
-    if tex ~= BASE and not IsCustomAtlasCompatible() and not GetAllowUnsupportedAtlas() then
+    if tex ~= BASE and not CanApplyCustomAtlas() then
       if not atlasCompatibilityWarned then
         atlasCompatibilityWarned = true
         print(("ColTrack: custom tracking presets are disabled for this WoW client because Blizzard changed the minimap icon atlas after %s. Using Base (Blizzard) to avoid corrupting unrelated icons."):format(CUSTOM_ATLAS_TOC))
@@ -241,19 +285,6 @@ local function MinimapConfig()
   return mm
 end
 
-local function GetDebugProbeEnabled()
-  ColTrackDB = ColTrackDB or {}
-  if ColTrackDB.debugProbeEnabled == nil then
-    ColTrackDB.debugProbeEnabled = false
-  end
-  return ColTrackDB.debugProbeEnabled
-end
-
-local function SetDebugProbeEnabled(v)
-  ColTrackDB = ColTrackDB or {}
-  ColTrackDB.debugProbeEnabled = v and true or false
-end
-
 local function GetUndermineOverlayEnabled()
   ColTrackDB = ColTrackDB or {}
   if ColTrackDB.enableUndermineOverlay == nil then
@@ -325,129 +356,6 @@ local function RefreshUndermineOverlayState()
   end
 end
 
-local function ProbePrint(msg)
-  print("ColTrack Probe: " .. msg)
-end
-
-local function ProbeHookTooltip()
-  if probeHooked or not GameTooltip then
-    return
-  end
-
-  probeHooked = true
-  GameTooltip:HookScript("OnShow", function(tt)
-    if not probeEnabled or not Minimap or not MouseIsOver(Minimap) then
-      return
-    end
-
-    local text = GameTooltipTextLeft1 and GameTooltipTextLeft1:GetText()
-    if not text or text == "" then
-      return
-    end
-
-    local now = GetTime and GetTime() or 0
-    if text == probeLastText and probeLastAt and (now - probeLastAt) < 0.75 then
-      return
-    end
-
-    probeLastText = text
-    probeLastAt = now
-
-    local owner = tt:GetOwner()
-    local ownerName = owner and owner.GetName and owner:GetName() or "unknown"
-    ProbePrint(("minimap tooltip: '%s' (owner=%s)"):format(text, tostring(ownerName)))
-  end)
-end
-
-local function ProbeScanMinimapChildren()
-  if not Minimap then
-    ProbePrint("Minimap frame unavailable.")
-    return
-  end
-
-  local children = { Minimap:GetChildren() }
-  local textureStats = {}
-  local totalTextures = 0
-
-  for _, child in ipairs(children) do
-    local regions = { child:GetRegions() }
-    for _, region in ipairs(regions) do
-      if region and region.GetObjectType and region:GetObjectType() == "Texture" then
-        local atlas = region.GetAtlas and region:GetAtlas() or nil
-        local tex = region.GetTexture and region:GetTexture() or nil
-        if atlas or tex then
-          totalTextures = totalTextures + 1
-          local texKey = (atlas and ("atlas:" .. atlas)) or (type(tex) == "string" and ("tex:" .. tex) or ("tex:" .. tostring(tex)))
-          textureStats[texKey] = (textureStats[texKey] or 0) + 1
-        end
-      end
-    end
-  end
-
-  ProbePrint(("children=%d, textured_regions=%d"):format(#children, totalTextures))
-
-  local rows = {}
-  for key, count in pairs(textureStats) do
-    rows[#rows + 1] = { key = key, count = count }
-  end
-  table.sort(rows, function(a, b)
-    if a.count == b.count then
-      return a.key < b.key
-    end
-    return a.count > b.count
-  end)
-
-  local shown = math.min(#rows, 12)
-  for i = 1, shown do
-    ProbePrint(("[%d] %s (x%d)"):format(i, rows[i].key, rows[i].count))
-  end
-end
-
-local function RegisterProbeSlash()
-  if SlashCmdList.COLTRACKPROBE then
-    return
-  end
-
-  SLASH_COLTRACKPROBE1 = "/coltrackprobe"
-  SLASH_COLTRACKPROBE2 = "/ctprobe"
-  SlashCmdList.COLTRACKPROBE = function(msg)
-    local arg = strlower(strtrim(msg or ""))
-    if arg == "" or arg == "help" then
-      ProbePrint("commands: /ctprobe on | off | status | scan")
-      ProbePrint("while ON, hovering minimap icons prints tooltip names to chat.")
-      return
-    end
-    if arg == "on" then
-      if not GetDebugProbeEnabled() then
-        ProbePrint("disabled in options. Enable 'Debug: allow /ctprobe commands' first.")
-        return
-      end
-      probeEnabled = true
-      ProbeHookTooltip()
-      ProbePrint("enabled.")
-      return
-    end
-    if arg == "off" then
-      probeEnabled = false
-      ProbePrint("disabled.")
-      return
-    end
-    if arg == "status" then
-      ProbePrint("status: " .. (probeEnabled and "ON" or "OFF"))
-      return
-    end
-    if arg == "scan" then
-      if not GetDebugProbeEnabled() then
-        ProbePrint("disabled in options. Enable 'Debug: allow /ctprobe commands' first.")
-        return
-      end
-      ProbeScanMinimapChildren()
-      return
-    end
-    ProbePrint("unknown command. use /ctprobe help")
-  end
-end
-
 local function ActiveStore()
   if GetUseGlobal() then
     ColTrackDB = ColTrackDB or {}
@@ -482,7 +390,7 @@ local function SavePreset(tex)
   store.profiles[profileName].tex = tex
 end
 
-local function LoadPreset()
+LoadPreset = function()
   local store = EnsureStore(ActiveStore())
   local profile = store.profiles[store.currentProfile]
   local tex = (profile and profile.tex) or BASE
@@ -597,7 +505,11 @@ local function InitMinimapIcon()
       end,
       OnTooltipShow = function(tooltip)
         tooltip:AddLine("ColTrack")
-        tooltip:AddLine("Left-click: next preset", 0.9, 0.9, 0.9)
+        if HasBlipTextureAPI() then
+          tooltip:AddLine("Left-click: next preset", 0.9, 0.9, 0.9)
+        else
+          tooltip:AddLine("Custom minimap presets unavailable on this WoW client", 1, 0.82, 0)
+        end
         tooltip:AddLine("Right-click: options", 0.9, 0.9, 0.9)
       end,
     })
@@ -646,6 +558,53 @@ local function CreatePanels()
   rootPanel.desc:SetPoint("TOPLEFT", rootPanel.version, "BOTTOMLEFT", 0, -8)
   rootPanel.desc:SetText("Configure minimap tracking presets and profiles.")
 
+  if not unavailableApiPopup then
+    unavailableApiPopup = CreateFrame("Frame", "ColTrackUnavailableApiPopup", UIParent, "BackdropTemplate")
+    unavailableApiPopup:SetSize(460, 210)
+    unavailableApiPopup:SetPoint("CENTER")
+    unavailableApiPopup:SetFrameStrata("DIALOG")
+    unavailableApiPopup:SetFrameLevel(100)
+    unavailableApiPopup:SetBackdrop({
+      bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+      edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+      tile = true,
+      tileSize = 32,
+      edgeSize = 32,
+      insets = { left = 11, right = 12, top = 12, bottom = 11 },
+    })
+    unavailableApiPopup:EnableMouse(true)
+    unavailableApiPopup:SetMovable(true)
+    unavailableApiPopup:RegisterForDrag("LeftButton")
+    unavailableApiPopup:SetScript("OnDragStart", unavailableApiPopup.StartMoving)
+    unavailableApiPopup:SetScript("OnDragStop", unavailableApiPopup.StopMovingOrSizing)
+    unavailableApiPopup:Hide()
+
+    local title = unavailableApiPopup:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    title:SetPoint("TOP", 0, -22)
+    title:SetText("ColTrack")
+
+    local text = unavailableApiPopup:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    text:SetPoint("TOPLEFT", 28, -54)
+    text:SetPoint("TOPRIGHT", -28, -54)
+    text:SetJustifyH("LEFT")
+    text:SetJustifyV("TOP")
+    text:SetText("I'm sorry, but Blizzard's recent minimap API changes prevent ColTrack from changing tracking icons on this WoW client.\n\nYou can uninstall ColTrack for now, or keep it installed while I look for a workaround.")
+
+    local checkbox = CreateFrame("CheckButton", nil, unavailableApiPopup, "InterfaceOptionsCheckButtonTemplate")
+    checkbox:SetPoint("BOTTOMLEFT", 24, 48)
+    checkbox.Text:SetText("Do not show again")
+    unavailableApiPopup.checkbox = checkbox
+
+    local ok = CreateFrame("Button", nil, unavailableApiPopup, "UIPanelButtonTemplate")
+    ok:SetSize(96, 24)
+    ok:SetPoint("BOTTOM", 0, 22)
+    ok:SetText(OKAY)
+    ok:SetScript("OnClick", function()
+      SetSuppressUnavailableApiNotice(checkbox:GetChecked())
+      unavailableApiPopup:Hide()
+    end)
+  end
+
   if not StaticPopupDialogs["COLTRACK_NEW_PROFILE"] then
     StaticPopupDialogs["COLTRACK_NEW_PROFILE"] = {
       text = "New profile name",
@@ -684,7 +643,10 @@ local function CreatePanels()
   atlasStatus:SetPoint("TOPLEFT", presetsTitle, "BOTTOMLEFT", 0, -6)
   atlasStatus:SetWidth(560)
   atlasStatus:SetJustifyH("LEFT")
-  if IsCustomAtlasCompatible() or GetAllowUnsupportedAtlas() then
+  if not HasBlipTextureAPI() then
+    atlasStatus:SetText("Custom minimap presets are unavailable on this WoW client because Blizzard removed or hid Minimap:SetBlipTexture. Preset selection is saved, but minimap icons remain Blizzard-default.")
+    atlasStatus:SetTextColor(1, 0.82, 0, 1)
+  elseif IsCustomAtlasCompatible() or GetAllowUnsupportedAtlas() then
     atlasStatus:SetText("")
   else
     atlasStatus:SetText(("Custom presets are temporarily disabled on this WoW client because the minimap atlas changed after %s. Base (Blizzard) is used for safety."):format(CUSTOM_ATLAS_TOC))
@@ -820,23 +782,6 @@ local function CreatePanels()
   unsafeAtlasHint:SetText("Use only for diagnostics. Unsupported atlas presets can change unrelated icons such as chests, traps, or stable masters.")
   unsafeAtlasHint:SetTextColor(0.8, 0.8, 0.8, 1)
 
-  local debugProbe = CreateFrame("CheckButton", nil, minimapOptionsPanel, "InterfaceOptionsCheckButtonTemplate")
-  debugProbe:SetPoint("TOPLEFT", unsafeAtlasHint, "BOTTOMLEFT", -24, -8)
-  debugProbe.Text:SetText("Debug: allow /ctprobe commands")
-  debugProbe:SetChecked(GetDebugProbeEnabled())
-  debugProbe:SetScript("OnClick", function(self)
-    local enabled = self:GetChecked()
-    SetDebugProbeEnabled(enabled)
-    if not enabled and probeEnabled then
-      probeEnabled = false
-      ProbePrint("auto-disabled because debug option was turned off.")
-    end
-  end)
-
-  local debugProbeHint = minimapOptionsPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-  debugProbeHint:SetPoint("TOPLEFT", debugProbe, "BOTTOMLEFT", 24, -2)
-  debugProbeHint:SetText("Advanced diagnostics for minimap icon API checks.")
-  debugProbeHint:SetTextColor(0.8, 0.8, 0.8, 1)
 
   profilesPanel = CreateFrame("Frame")
   profilesPanel.name = "Profiles"
@@ -1058,8 +1003,8 @@ f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 f:SetScript("OnEvent", function(_, event)
   if event == "PLAYER_LOGIN" then
     Apply(LoadPreset())
-    RegisterProbeSlash()
     CreatePanels()
+    ShowUnavailableApiNotice()
     InitMinimapIcon()
     RefreshUndermineOverlayState()
     return

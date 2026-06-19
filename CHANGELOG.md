@@ -1,8 +1,11 @@
 # Changelog
 
-## Unreleased
+## v1.0.2
+- Added a login popup explaining that Blizzard's recent minimap API changes prevent ColTrack from changing tracking icons on affected WoW clients, with a "Do not show again" checkbox.
+- Detected WoW clients where `Minimap:SetBlipTexture` is unavailable and show an in-game warning that custom minimap presets cannot be applied.
+- Made in-game version metadata lookup safe so missing legacy addon APIs cannot stop addon initialization.
 - Added in-game version text on the main ColTrack options page.
-- Added support for a local build suffix so locally synced test builds can display `a` (for example `1.0.1a`) without changing packaged release metadata.
+- Added support for a local build suffix so locally synced test builds can display `a` (for example `1.0.2a`) without changing packaged release metadata.
 - Expanded `.pkgmeta` ignores to keep local-only development files out of packaged releases.
 
 ## v1.0.1
